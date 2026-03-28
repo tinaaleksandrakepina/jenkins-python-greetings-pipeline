@@ -37,8 +37,23 @@ def deployEnv(String envName, String port) {
         sh "echo 'Starting greetings-app-${envName} with PM2...'"
         sh "pm2 start app.py --name greetings-app-${envName} --interpreter ./venv/bin/python -- --port ${port}"
 
-        sh "echo 'Checking API on ${envName}...'"
-        sh "curl -f http://127.0.0.1:${port}/greetings"
+        sh "echo 'Waiting for API on ${envName} to become available...'"
+        sh """
+        for i in \$(seq 1 15); do
+          if curl -fsS http://127.0.0.1:${port}/greetings > /dev/null; then
+            echo "API on ${envName} is up."
+            curl -fsS http://127.0.0.1:${port}/greetings
+            exit 0
+          fi
+          echo "Attempt \$i/15: API not ready yet, waiting 2 seconds..."
+          sleep 2
+        done
+
+        echo "API on ${envName} did not start in time."
+        pm2 list
+        pm2 logs greetings-app-${envName} --lines 20 --nostream || true
+        exit 1
+        """
 
         sh "echo 'PM2 process list:'"
         sh 'pm2 list'
