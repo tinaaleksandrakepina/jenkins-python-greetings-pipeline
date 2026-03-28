@@ -1,14 +1,14 @@
 def clonePythonRepo() {
     dir('python-greetings') {
         deleteDir()
-        git url: 'https://github.com/mtararujs/python-greetings.git'
+        git branch: 'main', url: 'https://github.com/mtararujs/python-greetings.git'
     }
 }
 
 def cloneTestsRepo() {
     dir('course-js-api-framework') {
         deleteDir()
-        git url: 'https://github.com/mtararujs/course-js-api-framework.git'
+        git branch: 'main', url: 'https://github.com/mtararujs/course-js-api-framework.git'
     }
 }
 
