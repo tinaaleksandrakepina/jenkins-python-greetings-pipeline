@@ -39,7 +39,7 @@ def deployEnv(String envName, String port) {
 
         sh "echo 'Waiting for API on ${envName} to become available...'"
         sh """
-        for i in \$(seq 1 15); do
+        for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15; do
           if curl -fsS http://127.0.0.1:${port}/greetings > /dev/null; then
             echo "API on ${envName} is up."
             curl -fsS http://127.0.0.1:${port}/greetings
