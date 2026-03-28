@@ -1,19 +1,19 @@
-def clonePythonRepo() {
-    dir('python-greetings') {
+def clonePythonRepo(String targetDir) {
+    dir(targetDir) {
         deleteDir()
         git branch: 'main', url: 'https://github.com/mtararujs/python-greetings.git'
     }
 }
 
-def cloneTestsRepo() {
-    dir('course-js-api-framework') {
+def cloneTestsRepo(String targetDir) {
+    dir(targetDir) {
         deleteDir()
         git branch: 'main', url: 'https://github.com/mtararujs/course-js-api-framework.git'
     }
 }
 
-def installPythonDeps() {
-    dir('python-greetings') {
+def installPythonDeps(String targetDir) {
+    dir(targetDir) {
         sh 'echo "Creating Python virtual environment..."'
         sh 'python3 -m venv venv'
 
@@ -23,15 +23,17 @@ def installPythonDeps() {
 }
 
 def deployEnv(String envName, String port) {
+    def appDir = "python-greetings-${envName}"
+
     echo "Deploying to ${envName} environment on port ${port}..."
 
-    clonePythonRepo()
-    installPythonDeps()
+    sh "echo 'Stopping existing service greetings-app-${envName} if it exists...'"
+    sh "pm2 delete greetings-app-${envName} || true"
 
-    dir('python-greetings') {
-        sh "echo 'Stopping existing service greetings-app-${envName} if it exists...'"
-        sh "pm2 delete greetings-app-${envName} || true"
+    clonePythonRepo(appDir)
+    installPythonDeps(appDir)
 
+    dir(appDir) {
         sh "echo 'Starting greetings-app-${envName} with PM2...'"
         sh "pm2 start app.py --name greetings-app-${envName} --interpreter ./venv/bin/python -- --port ${port}"
 
@@ -44,11 +46,13 @@ def deployEnv(String envName, String port) {
 }
 
 def testEnv(String envName) {
+    def testDir = "course-js-api-framework-${envName}"
+
     echo "Running API tests on ${envName} environment..."
 
-    cloneTestsRepo()
+    cloneTestsRepo(testDir)
 
-    dir('course-js-api-framework') {
+    dir(testDir) {
         sh 'echo "Installing npm dependencies..."'
         sh 'npm install'
 
@@ -69,12 +73,12 @@ pipeline {
             steps {
                 echo 'Installing all required dependencies for Python microservice...'
                 script {
-                    clonePythonRepo()
-                    dir('python-greetings') {
+                    clonePythonRepo('python-greetings-install')
+                    dir('python-greetings-install') {
                         sh 'echo "Listing repository files..."'
                         sh 'ls -la'
                     }
-                    installPythonDeps()
+                    installPythonDeps('python-greetings-install')
                 }
             }
         }
